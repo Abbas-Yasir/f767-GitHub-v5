@@ -795,9 +795,23 @@ int main(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // Control the sharedFM, SET=STM32 RESET=ATMEGA
   HAL_Delay(100);
 
+  char readBytes[200]="ABC";
+  int i;
+//  eraseSector_3ByteAdd_FM(localPortFM,0);
+//  eraseSector_3ByteAdd_FM(shrdPortFM ,0);
 
-  eraseSector_3ByteAdd_FM(localPortFM,0);
-  eraseSector_3ByteAdd_FM(shrdPortFM ,0);
+  W25qxx_EraseBlock(0);
+
+  W25qxx_ReadBytes(readBytes, 0, 16*10);
+//  for ( i=0; i<200; i++) {if(i%16==0) {printf("\r\n");} printf("%X ",readBytes[i]);}
+
+  W25qxx_WriteBlock(IMG, 0, 0, sizeof(IMG));
+
+  W25qxx_ReadBytes(readBytes, 0, 16*10);
+//  for ( i=0; i<200; i++) {if(i%16==0) {printf("\r\n");} printf("%X ",readBytes[i]);}
+
+
+
 
   uint8_t emptyLoop=0;
 
