@@ -1329,7 +1329,7 @@ int main(void)
 	  double predict;
 	  uint8_t SR = 0x22;
 
-	  size_t sz_work = 3100;
+	  size_t sz_work = 5100;
 
 	  char buf[50];
 	  int buf_len = 0;
@@ -1396,19 +1396,20 @@ int main(void)
 //  W25qxx_ReadBytes(readBytes, 0, 16*10);
 ////  for ( i=0; i<200; i++) {if(i%16==0) {printf("\r\n");} printf("%X ",readBytes[i]);}
 
-
+//	uint8_t* Target;
+#define Target  Earth
 
 	HAL_Delay(1000);
 	W25qxx_EraseBlock(0);
 
 	HAL_Delay(1000);
-	W25qxx_ReadBytes( readBytes, 0, sizeof(Space) );
+	W25qxx_ReadBytes( readBytes, 0, sizeof(Target)%sizeof(readBytes) );
 
 	HAL_Delay(1000);
 //	saveImage_LocalFM(0x00000000, Space); //Space or Earth
-	W25qxx_WriteBlock(Space, 0, 0, sizeof(Space));
+	W25qxx_WriteBlock(Target, 0, 0, sizeof(Target));
 
-	StringLength=sprintf(txString,"\r\nSpace size=%d, Earth size=%d\r\n",sizeof(Space),sizeof(Earth));
+	StringLength=sprintf(txString,"\r\nTarget size=%d,Space size=%d, Earth size=%d\r\n",sizeof(Target),sizeof(Space),sizeof(Earth));
 	HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
 
 
@@ -1427,7 +1428,7 @@ int main(void)
 	  	count++;
 
 	  	if (count == 1) {
-	  		  W25qxx_ReadBytes( readBytes, 0, sizeof(Space) );
+	  		W25qxx_ReadBytes( readBytes, 0, sizeof(Target)%sizeof(readBytes) );
 	  	}
 
 
@@ -1446,7 +1447,7 @@ int main(void)
 
 	  	  			HAL_Delay(1000);
 	  	  			devid.fp=0;
-	  	  			devid.fp= Space;
+//	  	  			devid.fp= Space;
 
 	  				StringLength=sprintf(txString,"\r\n");
 	  				HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
@@ -2002,7 +2003,7 @@ void saveImage_LocalFM(uint32_t StartingAddr,uint8_t *imageHex)
 
 	localChipDeSelect();
 
-	StringLength=sprintf(txString,"\r\n\r\nImageSize:%u, saved size:%u\r\n",sizeof(Space),i+1);
+	StringLength=sprintf(txString,"\r\n\r\nImageSize:%u, saved size:%u\r\n",sizeof(imageHex),i+1);
 	HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
 
 	StringLength=sprintf(txString,"Image has been saved in LocalFM \r\n\r\n");
