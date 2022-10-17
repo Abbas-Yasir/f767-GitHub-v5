@@ -1362,11 +1362,11 @@ int main(void)
 
 
 	  // Chunk of memory used to hold intermediate values for neural network
-	  AI_ALIGNED(4)	  ai_u8 activations[AI_SINE_MODEL_DATA_ACTIVATIONS_SIZE];
+	  ai_u8 activations[AI_SINE_MODEL_DATA_ACTIVATIONS_SIZE];
 
 	  // Buffers used to store input and output tensors
-	  AI_ALIGNED(4)	  ai_i8 in_data[AI_SINE_MODEL_IN_1_SIZE_BYTES];
-	  AI_ALIGNED(4)	  ai_i8 out_data[AI_SINE_MODEL_OUT_1_SIZE_BYTES];
+	  ai_i8 in_data[AI_SINE_MODEL_IN_1_SIZE_BYTES];
+	  ai_i8 out_data[AI_SINE_MODEL_OUT_1_SIZE_BYTES];
 
 	  // Pointer to our model
 	  ai_handle sine_model = AI_HANDLE_NULL;
@@ -1386,11 +1386,11 @@ int main(void)
 
 
 	  // Chunk of memory used to hold intermediate values for neural network
-	  AI_ALIGNED(4) ai_u8 activations_ICU[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
+	  ai_u8 activations_ICU[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
 
 	  // Buffers used to store input and output tensors
-	  uint8_t image[AI_NETWORK_IN_1_SIZE_BYTES] = {0};
-	  AI_ALIGNED(4) ai_i8 out_data_ICU[AI_NETWORK_OUT_1_SIZE_BYTES];
+	  ai_i8 image[AI_NETWORK_IN_1_SIZE_BYTES];
+	  ai_i8 out_data_ICU[AI_NETWORK_OUT_1_SIZE_BYTES];
 
 	  // Pointer to our model
 	  ai_handle icu_tflite = AI_HANDLE_NULL;
@@ -1401,7 +1401,13 @@ int main(void)
 	  ai_buffer ai_output_ICU[AI_NETWORK_OUT_NUM] = AI_NETWORK_OUT;
 
 	  // Set working memory and get weights/biases from model
-	  ai_network_params ai_params_ICU = AI_NETWORK_PARAMS_INIT(AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()), AI_NETWORK_DATA_ACTIVATIONS(activations_ICU));
+//	  ai_network_params ai_params_ICU = AI_NETWORK_PARAMS_INIT(AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()), AI_NETWORK_DATA_ACTIVATIONS(activations_ICU));
+	  ai_network_params ai_params_ICU = {
+			  AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()),
+			  AI_NETWORK_DATA_ACTIVATIONS(activations_ICU)
+	  };
+
+
 
 	  //		ai_input_ICU[0].n_batches = 1;
 	  		ai_input_ICU[0].data = AI_HANDLE_PTR(image);
@@ -1457,10 +1463,11 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM14_Init();
   MX_CRC_Init();
+  MX_TIM13_Init();
   /* USER CODE BEGIN 2 */
   W25qxx_Init();
 
-  HAL_Delay(5000);
+//  HAL_Delay(5000);
 
   //#define testPortFM shrdPortFM //shrdPortFM or localPortFM
 
@@ -1469,40 +1476,25 @@ int main(void)
   HAL_Delay(100);
 
   char readBytes[5000]="ABC";
-//  eraseSector_3ByteAdd_FM(localPortFM,0);
-//  eraseSector_3ByteAdd_FM(shrdPortFM ,0);
-
-//  W25qxx_EraseBlock(0);
-//
-//  W25qxx_ReadBytes(readBytes, 0, 16*10);
-////  for ( i=0; i<200; i++) {if(i%16==0) {printf("\r\n");} printf("%X ",readBytes[i]);}
-//
-//  W25qxx_WriteBlock(IMG, 0, 0, sizeof(IMG));
-//
-//  W25qxx_ReadBytes(readBytes, 0, 16*10);
-////  for ( i=0; i<200; i++) {if(i%16==0) {printf("\r\n");} printf("%X ",readBytes[i]);}
 
 //	uint8_t* Target;
 #define Target  Space
 
-	HAL_Delay(1000);
-	W25qxx_EraseBlock(0);
+//	W25qxx_EraseBlock(0);
 
-	HAL_Delay(1000);
+	HAL_Delay(10);
 	W25qxx_ReadBytes( readBytes, 0, sizeof(Target)%sizeof(readBytes) );
 
-	HAL_Delay(1000);
-//	saveImage_LocalFM(0x00000000, Space); //Space or Earth
-	W25qxx_WriteBlock(Target, 0, 0, sizeof(Target));
+	HAL_Delay(10);
+//	W25qxx_WriteBlock(Target, 0, 0, sizeof(Target));
 
 	StringLength=sprintf(txString,"\r\nTarget size=%d,Space size=%d, Earth size=%d\r\n",sizeof(Target),sizeof(Space),sizeof(Earth));
 	HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
 
 
-	compression_ratio = 3;
+	compression_ratio = 1;
 
 
-	uint8_t emptyLoop=0;
 
 
 	  // Greetings!
@@ -1574,7 +1566,7 @@ int main(void)
 	  	count++;
 
 	  	if (count == 1) {
-	  		W25qxx_ReadBytes( readBytes, 0, sizeof(Target)%sizeof(readBytes) );
+	  		W25qxx_ReadBytes( readBytes, 0, sizeof(Target) );
 	  	}
 
 		  // Fill input buffer (use test value)
@@ -1584,7 +1576,7 @@ int main(void)
 			}
 
 			// Get current timestamp
-			timestamp = htim14.Instance->CNT;
+			timestamp = htim13.Instance->CNT;
 
 			// Perform inference
 			nbatch = ai_sine_model_run(sine_model, &ai_input[0], &ai_output[0]);
@@ -1600,7 +1592,7 @@ int main(void)
 			buf_len = sprintf(buf,
 							  "Output: %f | Duration: %lu\r\n",
 							  y_val,
-							  htim14.Instance->CNT - timestamp);
+							  htim13.Instance->CNT - timestamp);
 			HAL_UART_Transmit(&debugPort, (uint8_t *)buf, buf_len, 100);
 
 			// Wait before doing it again
@@ -1628,7 +1620,7 @@ int main(void)
 
 	  	//			display_bulk_4ByteAdd_SharedFM(0x00000000, 3500);
 
-	  	  			res = jd_prepare(&jdec, in_func, work, 3100, &devid);													/* Prepare to decompress */
+	  	  			res = jd_prepare(&jdec, in_func, work, sz_work, &devid);													/* Prepare to decompress */
 	  	  			if (res == JDR_OK)
 	  	  			{																					/* Ready to decompress. Image info is available here. */
 	  	  				StringLength=sprintf(txString,"\r\n\nOriginal image size is %u x %u X 3.\r\n%u Bytes of work area is used.\r\n\n", jdec.width, jdec.height, sz_work - jdec.sz_pool);
@@ -1661,14 +1653,15 @@ int main(void)
 
 	  	  			HAL_Delay(1000);
 
-					ai_input_ICU[0].data = AI_HANDLE_PTR(image);
-//	  				ai_output_ICU[0].n_batches = 1;
-					ai_output_ICU[0].data = AI_HANDLE_PTR(out_data_ICU);
+//					ai_input_ICU[0].data = AI_HANDLE_PTR(image);
+////	  				ai_output_ICU[0].n_batches = 1;
+//					ai_output_ICU[0].data = AI_HANDLE_PTR(out_data_ICU);
 
 	  	  			// Image Classification Section
-	  	  		    for (int  i = 0; i < 19200; i++)
+	  	  		    for (uint32_t  ii = 0; ii < AI_NETWORK_IN_1_SIZE; ii++)
 	  	  		    {
-	  	  		    	image[i] = *(devid.fbuf + i);
+//	  	  		    	image[ii] = *(devid.fbuf + ii);
+	  	  		        ((ai_u8 *)image)[ii] = *(devid.fbuf + ii);
 	  	  		    }
 
 
@@ -1682,7 +1675,7 @@ int main(void)
 	  	  		    nbatch_ICU = ai_network_run(icu_tflite, &ai_input_ICU[0], &ai_output_ICU[0]);
 
 	  	  		    if (nbatch_ICU != 1) {
-	  	  		      buf_len = sprintf(buf, "Error: could not run inference\r\n");
+	  	  		      buf_len = sprintf(buf, "Error: could not run inference. nbatch_ICU=%lu\r\n",(int32_t)nbatch_ICU);
 	  	  		      HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
 	  	  		    }
 	  	  		    else

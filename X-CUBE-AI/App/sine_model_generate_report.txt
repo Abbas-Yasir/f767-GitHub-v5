@@ -1,6 +1,6 @@
 Neural Network Tools for STM32AI v1.6.0 (STM.ai v7.2.0-RC5)
-Created date          : 2022-10-17 17:40:47
-Parameters            : generate --name sine_model -m C:/Users/yasir/Documents/sine_model.tflite --type tflite --compression none --verbosity 1 --workspace C:\Users\yasir\AppData\Local\Temp\mxAI_workspace47961137117990010612010080268340030 --output C:\Users\yasir\.stm32cubemx\network_output --allocate-inputs --allocate-outputs
+Created date          : 2022-10-17 17:55:36
+Parameters            : generate --name sine_model -m C:/Users/yasir/Documents/sine_model.tflite --type tflite --compression none --verbosity 1 --workspace C:\Users\yasir\AppData\Local\Temp\mxAI_workspace4805007985493003839965130178647797 --output C:\Users\yasir\.stm32cubemx\network_output --allocate-inputs --allocate-outputs
 
 Exec/report summary (generate)
 ------------------------------------------------------------------------------------------------------------------------
@@ -9,7 +9,7 @@ type                  : tflite
 c_name                : sine_model
 compression           : none
 allocator strategy    : ['allocate-inputs', 'allocate-outputs']
-workspace dir         : C:\Users\yasir\AppData\Local\Temp\mxAI_workspace47961137117990010612010080268340030
+workspace dir         : C:\Users\yasir\AppData\Local\Temp\mxAI_workspace4805007985493003839965130178647797
 output dir            : C:\Users\yasir\.stm32cubemx\network_output
 model_name            : sine_model
 model_hash            : c84763f68e9ca5219f19871fe3bf49f8
