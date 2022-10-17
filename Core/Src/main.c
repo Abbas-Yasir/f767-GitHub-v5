@@ -1327,7 +1327,7 @@ int main(void)
 	  int image_size = 0;
 
 	  double predict;
-	  uint8_t SR = 0x22;
+	  uint8_t SR = 0x24;
 
 	  size_t sz_work = 5100;
 
