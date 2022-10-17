@@ -31,8 +31,12 @@
 /* USER CODE BEGIN Includes */
 #include "ai_datatypes_defines.h"
 #include "ai_platform.h"
+
 #include "network_data.h"
 #include "network.h"
+
+#include "sine_model.h"
+#include "sine_model_data.h"
 
 #include <math.h>
 #include "string.h"
@@ -1339,10 +1343,46 @@ int main(void)
 
 	  char buf[50];
 	  int buf_len = 0;
+
+	  ai_error ai_err;
 	  ai_error ai_err_ICU;
+
+
+	  ai_i32 nbatch;
 	  ai_i32 nbatch_ICU;
+
+	  uint32_t timestamp;
 	  uint32_t timestamp_ICU;
+
 	  uint8_t prediction = 0xFF;
+
+	  float y_val;
+
+
+
+
+	  // Chunk of memory used to hold intermediate values for neural network
+	  AI_ALIGNED(4)	  ai_u8 activations[AI_SINE_MODEL_DATA_ACTIVATIONS_SIZE];
+
+	  // Buffers used to store input and output tensors
+	  AI_ALIGNED(4)	  ai_i8 in_data[AI_SINE_MODEL_IN_1_SIZE_BYTES];
+	  AI_ALIGNED(4)	  ai_i8 out_data[AI_SINE_MODEL_OUT_1_SIZE_BYTES];
+
+	  // Pointer to our model
+	  ai_handle sine_model = AI_HANDLE_NULL;
+
+	  // Initialize wrapper structs that hold pointers to data and info about the
+	  // data (tensor height, width, channels)
+	  ai_buffer ai_input[AI_SINE_MODEL_IN_NUM] = AI_SINE_MODEL_IN;
+	  ai_buffer ai_output[AI_SINE_MODEL_OUT_NUM] = AI_SINE_MODEL_OUT;
+
+
+	  // Set working memory and get weights/biases from model
+	  ai_network_params ai_params = {
+	    AI_SINE_MODEL_DATA_WEIGHTS(ai_sine_model_data_weights_get()),
+	    AI_SINE_MODEL_DATA_ACTIVATIONS(activations)
+	  };
+
 
 
 	  // Chunk of memory used to hold intermediate values for neural network
@@ -1363,6 +1403,19 @@ int main(void)
 	  // Set working memory and get weights/biases from model
 	  ai_network_params ai_params_ICU = AI_NETWORK_PARAMS_INIT(AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()), AI_NETWORK_DATA_ACTIVATIONS(activations_ICU));
 
+	  //		ai_input_ICU[0].n_batches = 1;
+	  		ai_input_ICU[0].data = AI_HANDLE_PTR(image);
+	  //		ai_output_ICU[0].n_batches = 1;
+	  		ai_output_ICU[0].data = AI_HANDLE_PTR(out_data_ICU);
+
+	  		//End of ICU part 2
+
+
+	  	  // Set pointers wrapper structs to our data buffers
+	  //	  ai_input[0].n_batches = 1;
+	  	  ai_input[0].data = AI_HANDLE_PTR(in_data);
+	  //	  ai_output[0].n_batches = 1;
+	  	  ai_output[0].data = AI_HANDLE_PTR(out_data);
 
   /* USER CODE END 1 */
 
@@ -1458,6 +1511,34 @@ int main(void)
 
 
 	  // Create instance of neural network
+	  ai_err = ai_sine_model_create(&sine_model, AI_SINE_MODEL_DATA_CONFIG);
+	  if (ai_err.type != AI_ERROR_NONE)
+	  {
+	    buf_len = sprintf(buf, "Error: could not create NN instance\r\n");
+	    HAL_UART_Transmit(&debugPort, (uint8_t *)buf, buf_len, 100);
+	    while(1);
+	  }
+	  else
+	  {
+		    buf_len = sprintf(buf, "NN instance created! \r\n");
+		    HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	  }
+
+	  // Initialize neural network
+	  if (!ai_sine_model_init(sine_model, &ai_params))
+	  {
+	    buf_len = sprintf(buf, "Error: could not initialize NN\r\n");
+	    HAL_UART_Transmit(&debugPort, (uint8_t *)buf, buf_len, 100);
+	    while(1);
+	  }
+	  else
+	  {
+		    buf_len = sprintf(buf, "NN initialized\r\n");
+		    HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	  }
+
+
+	  // Create instance of neural network
 	  ai_err_ICU = ai_network_create(&icu_tflite, AI_NETWORK_DATA_CONFIG);
 	  if (ai_err_ICU.type != AI_ERROR_NONE)
 	  {
@@ -1496,6 +1577,34 @@ int main(void)
 	  		W25qxx_ReadBytes( readBytes, 0, sizeof(Target)%sizeof(readBytes) );
 	  	}
 
+		  // Fill input buffer (use test value)
+			for (uint32_t i = 0; i < AI_SINE_MODEL_IN_1_SIZE; i++)
+			{
+			  ((ai_float *)in_data)[i] = (ai_float)1.0f;
+			}
+
+			// Get current timestamp
+			timestamp = htim14.Instance->CNT;
+
+			// Perform inference
+			nbatch = ai_sine_model_run(sine_model, &ai_input[0], &ai_output[0]);
+			if (nbatch != 1) {
+			  buf_len = sprintf(buf, "Error: could not run inference\r\n");
+			  HAL_UART_Transmit(&debugPort, (uint8_t *)buf, buf_len, 100);
+			}
+
+			// Read output (predicted y) of neural network
+			y_val = ((float *)out_data)[0];
+
+			// Print output of neural network along with inference time (microseconds)
+			buf_len = sprintf(buf,
+							  "Output: %f | Duration: %lu\r\n",
+							  y_val,
+							  htim14.Instance->CNT - timestamp);
+			HAL_UART_Transmit(&debugPort, (uint8_t *)buf, buf_len, 100);
+
+			// Wait before doing it again
+			HAL_Delay(500);
 
 
 	  	handshakeCAM = 0;
@@ -1657,7 +1766,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 160;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -1667,12 +1782,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }

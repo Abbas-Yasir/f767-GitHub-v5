@@ -40,8 +40,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/ST/AI/Inc/ai_datatypes_defines.h \
  ../Middlewares/ST/AI/Inc/ai_platform.h ../X-CUBE-AI/App/network_data.h \
  ../X-CUBE-AI/App/network_config.h ../X-CUBE-AI/App/network_data_params.h \
- ../X-CUBE-AI/App/network.h ../Core/Inc/w25qxx.h ../Core/Inc/spi.h \
- ../Core/Inc/w25qxxConf.h ../Core/Src/..\\tjpg\\tjpgd.h
+ ../X-CUBE-AI/App/network.h ../X-CUBE-AI/App/sine_model.h \
+ ../X-CUBE-AI/App/sine_model_config.h ../X-CUBE-AI/App/sine_model_data.h \
+ ../X-CUBE-AI/App/sine_model_data_params.h ../Core/Inc/w25qxx.h \
+ ../Core/Inc/spi.h ../Core/Inc/w25qxxConf.h ../Core/Src/..\\tjpg\\tjpgd.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../Core/Inc/stm32f7xx_hal_conf.h:
@@ -92,6 +94,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../X-CUBE-AI/App/network_config.h:
 ../X-CUBE-AI/App/network_data_params.h:
 ../X-CUBE-AI/App/network.h:
+../X-CUBE-AI/App/sine_model.h:
+../X-CUBE-AI/App/sine_model_config.h:
+../X-CUBE-AI/App/sine_model_data.h:
+../X-CUBE-AI/App/sine_model_data_params.h:
 ../Core/Inc/w25qxx.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/w25qxxConf.h:

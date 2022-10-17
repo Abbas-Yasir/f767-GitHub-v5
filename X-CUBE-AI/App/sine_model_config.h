@@ -1,9 +1,9 @@
 
 /**
   ******************************************************************************
-  * @file    network_config.h
+  * @file    sine_model_config.h
   * @author  AST Embedded Analytics Research Platform
-  * @date    Mon Oct 17 17:40:38 2022
+  * @date    Mon Oct 17 17:40:46 2022
   * @brief   AI Tool Automatic Code Generator for Custom Layers Implementation
   ******************************************************************************
   * @attention
@@ -17,8 +17,8 @@
   ******************************************************************************
   */
 
-#ifndef AI_NETWORK_CONFIG_H
-#define AI_NETWORK_CONFIG_H
+#ifndef AI_SINE_MODEL_CONFIG_H
+#define AI_SINE_MODEL_CONFIG_H
 #pragma once
 
 #undef AI_TOOLS_VERSION_MAJOR
@@ -44,4 +44,4 @@
 #define AI_TOOLS_API_VERSION_MINOR (5)
 #define AI_TOOLS_API_VERSION_MICRO (0)
 
-#endif /*AI_NETWORK_CONFIG_H*/
+#endif /*AI_SINE_MODEL_CONFIG_H*/

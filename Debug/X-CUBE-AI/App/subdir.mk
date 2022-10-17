@@ -7,17 +7,26 @@
 C_SRCS += \
 ../X-CUBE-AI/App/network.c \
 ../X-CUBE-AI/App/network_data.c \
-../X-CUBE-AI/App/network_data_params.c 
+../X-CUBE-AI/App/network_data_params.c \
+../X-CUBE-AI/App/sine_model.c \
+../X-CUBE-AI/App/sine_model_data.c \
+../X-CUBE-AI/App/sine_model_data_params.c 
 
 OBJS += \
 ./X-CUBE-AI/App/network.o \
 ./X-CUBE-AI/App/network_data.o \
-./X-CUBE-AI/App/network_data_params.o 
+./X-CUBE-AI/App/network_data_params.o \
+./X-CUBE-AI/App/sine_model.o \
+./X-CUBE-AI/App/sine_model_data.o \
+./X-CUBE-AI/App/sine_model_data_params.o 
 
 C_DEPS += \
 ./X-CUBE-AI/App/network.d \
 ./X-CUBE-AI/App/network_data.d \
-./X-CUBE-AI/App/network_data_params.d 
+./X-CUBE-AI/App/network_data_params.d \
+./X-CUBE-AI/App/sine_model.d \
+./X-CUBE-AI/App/sine_model_data.d \
+./X-CUBE-AI/App/sine_model_data_params.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -27,7 +36,7 @@ X-CUBE-AI/App/%.o X-CUBE-AI/App/%.su: ../X-CUBE-AI/App/%.c X-CUBE-AI/App/subdir.
 clean: clean-X-2d-CUBE-2d-AI-2f-App
 
 clean-X-2d-CUBE-2d-AI-2f-App:
-	-$(RM) ./X-CUBE-AI/App/network.d ./X-CUBE-AI/App/network.o ./X-CUBE-AI/App/network.su ./X-CUBE-AI/App/network_data.d ./X-CUBE-AI/App/network_data.o ./X-CUBE-AI/App/network_data.su ./X-CUBE-AI/App/network_data_params.d ./X-CUBE-AI/App/network_data_params.o ./X-CUBE-AI/App/network_data_params.su
+	-$(RM) ./X-CUBE-AI/App/network.d ./X-CUBE-AI/App/network.o ./X-CUBE-AI/App/network.su ./X-CUBE-AI/App/network_data.d ./X-CUBE-AI/App/network_data.o ./X-CUBE-AI/App/network_data.su ./X-CUBE-AI/App/network_data_params.d ./X-CUBE-AI/App/network_data_params.o ./X-CUBE-AI/App/network_data_params.su ./X-CUBE-AI/App/sine_model.d ./X-CUBE-AI/App/sine_model.o ./X-CUBE-AI/App/sine_model.su ./X-CUBE-AI/App/sine_model_data.d ./X-CUBE-AI/App/sine_model_data.o ./X-CUBE-AI/App/sine_model_data.su ./X-CUBE-AI/App/sine_model_data_params.d ./X-CUBE-AI/App/sine_model_data_params.o ./X-CUBE-AI/App/sine_model_data_params.su
 
 .PHONY: clean-X-2d-CUBE-2d-AI-2f-App
 
