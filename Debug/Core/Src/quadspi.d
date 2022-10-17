@@ -19,6 +19,8 @@ Core/Src/quadspi.o: ../Core/Src/quadspi.c ../Core/Inc/quadspi.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma_ex.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_cortex.h \
+ ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_crc.h \
+ ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_crc_ex.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash_ex.h \
  ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_i2c.h \
@@ -54,6 +56,8 @@ Core/Src/quadspi.o: ../Core/Src/quadspi.c ../Core/Inc/quadspi.h \
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dma_ex.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_cortex.h:
+../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_crc.h:
+../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_crc_ex.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_flash_ex.h:
 ../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_i2c.h:

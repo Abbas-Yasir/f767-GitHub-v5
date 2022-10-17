@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "dma.h"
 #include "quadspi.h"
 #include "spi.h"
@@ -28,6 +29,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ai_datatypes_defines.h"
+#include "ai_platform.h"
+#include "network_data.h"
+#include "network.h"
+
 #include <math.h>
 #include "string.h"
 #include <stdio.h>
@@ -1333,12 +1339,38 @@ int main(void)
 
 	  char buf[50];
 	  int buf_len = 0;
-//	  ai_error ai_err_ICU;
-//	  ai_i32 nbatch_ICU;
+	  ai_error ai_err_ICU;
+	  ai_i32 nbatch_ICU;
 	  uint32_t timestamp_ICU;
 	  uint8_t prediction = 0xFF;
 
+
+	  // Chunk of memory used to hold intermediate values for neural network
+	  AI_ALIGNED(4) ai_u8 activations_ICU[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
+
+	  // Buffers used to store input and output tensors
+	  uint8_t image[AI_NETWORK_IN_1_SIZE_BYTES] = {0};
+	  AI_ALIGNED(4) ai_i8 out_data_ICU[AI_NETWORK_OUT_1_SIZE_BYTES];
+
+	  // Pointer to our model
+	  ai_handle icu_tflite = AI_HANDLE_NULL;
+
+	  // Initialize wrapper structs that hold pointers to data and info about the
+	  // data (tensor height, width, channels)
+	  ai_buffer ai_input_ICU[AI_NETWORK_IN_NUM] = AI_NETWORK_IN;
+	  ai_buffer ai_output_ICU[AI_NETWORK_OUT_NUM] = AI_NETWORK_OUT;
+
+	  // Set working memory and get weights/biases from model
+	  ai_network_params ai_params_ICU = AI_NETWORK_PARAMS_INIT(AI_NETWORK_DATA_WEIGHTS(ai_network_data_weights_get()), AI_NETWORK_DATA_ACTIVATIONS(activations_ICU));
+
+
   /* USER CODE END 1 */
+
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -1371,6 +1403,7 @@ int main(void)
   MX_QUADSPI_Init();
   MX_USART2_UART_Init();
   MX_TIM14_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   W25qxx_Init();
 
@@ -1397,7 +1430,7 @@ int main(void)
 ////  for ( i=0; i<200; i++) {if(i%16==0) {printf("\r\n");} printf("%X ",readBytes[i]);}
 
 //	uint8_t* Target;
-#define Target  Earth
+#define Target  Space
 
 	HAL_Delay(1000);
 	W25qxx_EraseBlock(0);
@@ -1413,11 +1446,43 @@ int main(void)
 	HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
 
 
-	compression_ratio = 1;
+	compression_ratio = 3;
 
 
 	uint8_t emptyLoop=0;
 
+
+	  // Greetings!
+	  buf_len = sprintf(buf, "\r\n\r\nSTM32 X-Cube-AI\r\n");
+	  HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+
+
+	  // Create instance of neural network
+	  ai_err_ICU = ai_network_create(&icu_tflite, AI_NETWORK_DATA_CONFIG);
+	  if (ai_err_ICU.type != AI_ERROR_NONE)
+	  {
+	    buf_len = sprintf(buf, "Error: could not create NN instance\r\n");
+	    HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	    while(1);
+	  }
+	  else
+	  {
+		    buf_len = sprintf(buf, "NN instance created! \r\n");
+		    HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	  }
+
+	  // Initialize neural network
+	  if (!ai_network_init(icu_tflite, &ai_params_ICU))
+	  {
+	    buf_len = sprintf(buf, "Error: could not initialize NN\r\n");
+	    HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	    while(1);
+	  }
+	  else
+	  {
+		    buf_len = sprintf(buf, "NN initialized\r\n");
+		    HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -1486,12 +1551,85 @@ int main(void)
 	  	  			}
 
 	  	  			HAL_Delay(1000);
+
+					ai_input_ICU[0].data = AI_HANDLE_PTR(image);
+//	  				ai_output_ICU[0].n_batches = 1;
+					ai_output_ICU[0].data = AI_HANDLE_PTR(out_data_ICU);
+
+	  	  			// Image Classification Section
+	  	  		    for (int  i = 0; i < 19200; i++)
+	  	  		    {
+	  	  		    	image[i] = *(devid.fbuf + i);
+	  	  		    }
+
+
+	  	  		// Get current timestamp
+	  	  		timestamp_ICU = htim14.Instance->CNT;
+
+
+
+
+	  	  		    // Perform inference
+	  	  		    nbatch_ICU = ai_network_run(icu_tflite, &ai_input_ICU[0], &ai_output_ICU[0]);
+
+	  	  		    if (nbatch_ICU != 1) {
+	  	  		      buf_len = sprintf(buf, "Error: could not run inference\r\n");
+	  	  		      HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	  	  		    }
+	  	  		    else
+	  	  		    {
+	  	  		  	    buf_len = sprintf(buf, "\r\nRunning ICU tflite done!\r\n");
+	  	  		  	    HAL_UART_Transmit(&debugPort, (uint8_t *) &buf, buf_len, 100);
+	  	  		    }
+
+	  	  		    float max_val = -1;
+
+	  	  		    for(int i = 0; i < AI_NETWORK_OUT_1_SIZE; i++)
+	  	  		    {
+	  	  		        if(max_val < out_data_ICU[i])
+	  	  		        {
+	  	  		            max_val = out_data_ICU[i];
+	  	  		            prediction = i;
+
+	  						StringLength=sprintf(txString,"\r\n\nIndex:  %ld ", (long)prediction);
+	  						HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
+	  	  		        }
+	  	  		    }
+
+	  	  		    prediction = prediction;
+
+	  	  		// Print output of neural network along with inference time (microseconds)
+	  	  		StringLength = sprintf(txString,"Output: %f | Duration: %lu\r\n", prediction, htim14.Instance->CNT - timestamp_ICU);
+	  	  		HAL_UART_Transmit(&debugPort, (uint8_t *)txString, buf_len, 100);
+
+
+	  	  		    if (prediction == 1)
+	  	  		    {
+	  	  				StringLength=sprintf(txString,"\r\nPrediction:  Space \r\n");
+	  	  				HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
+//	  	  				HAL_UART_Transmit(&huart3, (uint8_t *) &Space_ICU, 1, 100);
+	  	  		    }
+	  	  		    else if (prediction == 0)
+	  	  		    {
+	  	  				StringLength=sprintf(txString,"\r\nPrediction:  Earth \r\n");
+	  	  				HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
+//	  	  				HAL_UART_Transmit(&huart3, (uint8_t *) &Earth_ICU, 1, 100);
+	  	  		    }
+	  	  		    else
+	  	  		    {
+	  	  				StringLength=sprintf(txString,"\r\nError Prediction \r\n");
+	  	  				HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
+//	  	  				HAL_UART_Transmit(&huart3, (uint8_t *) &Error_ICU, 1, 100);
+	  	  		    }
+
+
+
 	  	  	  	if (count == 10000) {
 	  	  	  		count = 0;																									/* Reset to zero to prevent overflowing bugs */
 	  	  	  	}
-	  	      /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-	  	      /* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
 
 	  	  		free(work);   /* Discard work area */
 	  	  		free(devid.fbuf);

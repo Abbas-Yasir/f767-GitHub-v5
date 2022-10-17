@@ -9,6 +9,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include X-CUBE-AI/App/subdir.mk
 -include Drivers/STM32F7xx_HAL_Driver/Src/subdir.mk
 -include Core/tjpg/subdir.mk
 -include Core/Startup/subdir.mk
@@ -62,7 +63,7 @@ main-build: f767-GitHub-v5.elf secondary-outputs
 
 # Tool invocations
 f767-GitHub-v5.elf f767-GitHub-v5.map: $(OBJS) $(USER_OBJS) D:\Micro\ Orbiter\GitHub\f767-GitHub-v5\STM32F767BITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "f767-GitHub-v5.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"D:\Micro Orbiter\GitHub\f767-GitHub-v5\STM32F767BITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f767-GitHub-v5.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "f767-GitHub-v5.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"D:\Micro Orbiter\GitHub\f767-GitHub-v5\STM32F767BITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f767-GitHub-v5.map" -Wl,--gc-sections -static -L../Middlewares/ST/AI/Lib -u _printf_float --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

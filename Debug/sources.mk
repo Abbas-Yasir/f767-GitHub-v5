@@ -25,4 +25,5 @@ Core/Src \
 Core/Startup \
 Core/tjpg \
 Drivers/STM32F7xx_HAL_Driver/Src \
+X-CUBE-AI/App \
 
