@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    network_data_params.c
   * @author  AST Embedded Analytics Research Platform
-  * @date    Mon Oct 17 17:55:27 2022
+  * @date    Mon Oct 17 18:56:04 2022
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * Copyright (c) 2022 STMicroelectronics.
@@ -29,11 +29,11 @@ ai_handle g_network_activations_table[1 + 2] = {
 
 /**  Weights Section  ********************************************************/
 AI_ALIGNED(32)
-const ai_u64 s_network_weights_array_u64[16] = {
-  0x7f745258607b4637U, 0x1cb581dd03a1416dU, 0xaa81af9ca4e9afe8U, 0xde01e8818d8aade2U,
-  0x435b7f2f90dac6b6U, 0x33705f6f6c38484bU, 0x2f14e247f407e6dU, 0x81c9fa9a2381e48eU,
-  0x3b1138705f8dca2U, 0xfffff064ffffe0deU, 0x9e4d0000d3adU, 0xffffe380ffffe498U,
-  0x7c8800007d2cU, 0x8d9a1a5f81941c2cU, 0x63518bea6e491ac3U, 0x786fffff87aU,
+const ai_u64 s_network_weights_array_u64[15] = {
+  0x7f1f50441a2f2810U, 0x87c7c7f3e7e044aU, 0x2d41517043081850U, 0xf423e37f6e7ff622U,
+  0x682d357409706643U, 0x5a4b7f1c31437ffdU, 0x81375df11e40134fU, 0x96d4f94687f9ded2U,
+  0x815285ee3bcd470dU, 0xffffe6c0ffffecc9U, 0xffffec73ffffec04U, 0xffffead2ffffea0dU,
+  0x8da10000a67bU, 0x7f6b82ba8f89d482U, 0x12c3U,
 };
 
 
