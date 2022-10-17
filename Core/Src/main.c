@@ -72,17 +72,19 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#ifdef __GNUC__
-  #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-  #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif
 
-PUTCHAR_PROTOTYPE
-{
-  HAL_UART_Transmit(&serialPortDebug,(uint8_t *)&ch,1,0xFFFF);//Blocking mode printing
-  return ch;
-}
+
+//#ifdef __GNUC__
+//  #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+//#else
+//  #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+//#endif
+//
+//PUTCHAR_PROTOTYPE
+//{
+//  HAL_UART_Transmit(&serialPortDebug,(uint8_t *)&ch,1,0xFFFF);//Blocking mode printing
+//  return ch;
+//}
 
 void write_3ByteAdd_FM(SPI_HandleTypeDef spiPort, uint32_t Addr, uint8_t writeDataByte);
 //void write_3ByteAdd_FM(SPI_HandleTypeDef spiPort, uint32_t Addr);
@@ -1265,6 +1267,35 @@ uint16_t in_func (JDEC* jd, uint8_t* buff, uint16_t nbyte);
 uint16_t out_func (JDEC* jd, void* bitmap, JRECT* rect);
 static void prepocess(uint8_t* Img, float result[19200*2]);
 int ReadSR(void);
+
+
+
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#define GETCHAR_PROTOTYPE int __io_getchar(void)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
+#endif
+PUTCHAR_PROTOTYPE
+{
+HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+return ch;
+}
+GETCHAR_PROTOTYPE
+{
+uint8_t ch = 0;
+
+/* Clear the Overrun flag just before receiving the first character */
+__HAL_UART_CLEAR_OREFLAG(&huart1);
+/* Wait for reception of a character on the USART RX line and echo this
+
+character on console */
+HAL_UART_Receive(&debugPort, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+HAL_UART_Transmit(&debugPort, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+return ch;
+}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -1480,13 +1511,13 @@ int main(void)
 //	uint8_t* Target;
 #define Target  Space
 
-//	W25qxx_EraseBlock(0);
+	W25qxx_EraseBlock(0);
 
 	HAL_Delay(10);
 	W25qxx_ReadBytes( readBytes, 0, sizeof(Target)%sizeof(readBytes) );
 
 	HAL_Delay(10);
-//	W25qxx_WriteBlock(Target, 0, 0, sizeof(Target));
+	W25qxx_WriteBlock(Target, 0, 0, sizeof(Target));
 
 	StringLength=sprintf(txString,"\r\nTarget size=%d,Space size=%d, Earth size=%d\r\n",sizeof(Target),sizeof(Space),sizeof(Earth));
 	HAL_UART_Transmit(&debugPort, (uint8_t *) &txString, StringLength, 100);
@@ -1562,6 +1593,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		printf("Loop\r\n");
+
 		work = (void*)malloc(sz_work);
 	  	count++;
 
@@ -1751,7 +1784,7 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -1762,11 +1795,18 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 160;
+  RCC_OscInitStruct.PLL.PLLN = 216;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Activate the Over-Drive mode
+  */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
@@ -1776,11 +1816,11 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
   {
     Error_Handler();
   }
